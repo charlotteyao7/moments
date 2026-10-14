@@ -51,6 +51,21 @@
       display: block;
     }
 
+    .ripple-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+
+    .ripple-canvas.ready {
+      opacity: 1;
+    }
+
     .mist {
       position: fixed;
       inset: -20%;
@@ -153,6 +168,182 @@
     if (source && source.getAttribute('src')) {
       video.classList.add('has-source');
     }
+
+    // Water ripples: redraws the video through a WebGL canvas that bends it
+    // around the cursor. If WebGL or the video texture is unavailable, the
+    // canvas is removed and the plain video shows as before.
+    (function ripples() {
+      if (!video.classList.contains('has-source')) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const canvas = document.createElement('canvas');
+      canvas.className = 'ripple-canvas';
+      canvas.setAttribute('aria-hidden', 'true');
+      const gl = canvas.getContext('webgl', { alpha: false, antialias: false });
+      if (!gl) return;
+      video.after(canvas);
+
+      const MAX = 24;
+      const vert = `
+        attribute vec2 aPos;
+        void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
+      `;
+      const frag = `
+        precision mediump float;
+        uniform sampler2D uTex;
+        uniform vec2 uRes;
+        uniform vec2 uVid;
+        uniform float uTime;
+        uniform float uDpr;
+        uniform vec4 uRipples[${MAX}]; // x, y (device px, y up), start time, strength
+
+        const float LIFE = 1.6;   // seconds
+        const float SPEED = 150.0; // css px / s
+        const float WIDTH = 20.0;  // css px
+        const float WAVE = 24.0;   // css px wavelength
+        const float AMP = 5.0;     // css px of displacement
+
+        vec3 sampleCover(vec2 p) {
+          float s = max(uRes.x / uVid.x, uRes.y / uVid.y);
+          vec2 uv = (p - uRes * 0.5) / (uVid * s) + 0.5;
+          uv.y = 1.0 - uv.y;
+          return texture2D(uTex, clamp(uv, 0.0, 1.0)).rgb;
+        }
+
+        void main() {
+          vec2 p = gl_FragCoord.xy;
+          vec2 offset = vec2(0.0);
+          float shade = 0.0;
+
+          for (int i = 0; i < ${MAX}; i++) {
+            vec4 r = uRipples[i];
+            if (r.w <= 0.0) continue;
+            float age = uTime - r.z;
+            if (age < 0.0 || age > LIFE) continue;
+
+            vec2 d = (p - r.xy) / uDpr;
+            float dist = length(d);
+            float x = dist - age * SPEED * (0.6 + 0.4 * r.w);
+            float band = exp(-(x * x) / (WIDTH * WIDTH));
+            float fade = 1.0 - age / LIFE;
+            float wave = sin(x * 6.2831 / WAVE) * band * fade * fade * r.w;
+
+            if (dist > 0.001) offset += (d / dist) * wave;
+            shade += wave;
+          }
+
+          offset *= AMP * uDpr;
+          // Faint prism: red and blue bend slightly more and less than green.
+          vec3 col = vec3(
+            sampleCover(p + offset * 1.25).r,
+            sampleCover(p + offset).g,
+            sampleCover(p + offset * 0.75).b
+          );
+          col += shade * 0.035;
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `;
+
+      function compile(type, src) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null;
+      }
+      const vs = compile(gl.VERTEX_SHADER, vert);
+      const fs = compile(gl.FRAGMENT_SHADER, frag);
+      const prog = gl.createProgram();
+      if (!vs || !fs) { canvas.remove(); return; }
+      gl.attachShader(prog, vs);
+      gl.attachShader(prog, fs);
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { canvas.remove(); return; }
+      gl.useProgram(prog);
+
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+      const aPos = gl.getAttribLocation(prog, 'aPos');
+      gl.enableVertexAttribArray(aPos);
+      gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+      const tex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+      const u = {};
+      ['uRes', 'uVid', 'uTime', 'uDpr', 'uRipples'].forEach((n) => {
+        u[n] = gl.getUniformLocation(prog, n);
+      });
+
+      let dpr = 1;
+      // Checked every frame, so it also catches a page that loads at 0x0.
+      function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        const w = Math.round(window.innerWidth * dpr);
+        const h = Math.round(window.innerHeight * dpr);
+        if (w === canvas.width && h === canvas.height) return;
+        canvas.width = w;
+        canvas.height = h;
+        gl.viewport(0, 0, w, h);
+      }
+
+      const ripples = new Float32Array(MAX * 4);
+      let next = 0;
+      const start = performance.now();
+      const now = () => (performance.now() - start) / 1000;
+
+      function addRipple(clientX, clientY, strength) {
+        const i = next * 4;
+        ripples[i] = clientX * dpr;
+        ripples[i + 1] = canvas.height - clientY * dpr;
+        ripples[i + 2] = now();
+        ripples[i + 3] = strength;
+        next = (next + 1) % MAX;
+      }
+
+      // Trail: one ripple per ~40px of movement, so it stays calm.
+      let lastX = null;
+      let lastY = null;
+      window.addEventListener('pointermove', (e) => {
+        if (lastX === null || Math.hypot(e.clientX - lastX, e.clientY - lastY) >= 40) {
+          addRipple(e.clientX, e.clientY, 0.6);
+          lastX = e.clientX;
+          lastY = e.clientY;
+        }
+      }, { passive: true });
+      // Click or tap: a bigger splash.
+      window.addEventListener('pointerdown', (e) => {
+        addRipple(e.clientX, e.clientY, 1.4);
+        lastX = e.clientX;
+        lastY = e.clientY;
+      }, { passive: true });
+
+      function frame() {
+        resize();
+        if (video.readyState >= 2 && canvas.width > 0 && canvas.height > 0) {
+          try {
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, video);
+          } catch (err) {
+            // The browser won't hand the video to WebGL (e.g. opened via file://).
+            canvas.remove();
+            return;
+          }
+          gl.uniform2f(u.uRes, canvas.width, canvas.height);
+          gl.uniform2f(u.uVid, video.videoWidth, video.videoHeight);
+          gl.uniform1f(u.uTime, now());
+          gl.uniform1f(u.uDpr, dpr);
+          gl.uniform4fv(u.uRipples, ripples);
+          gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+          canvas.classList.add('ready');
+        }
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    })();
   </script>
 </body>
 </html>
