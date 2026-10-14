@@ -3,390 +3,155 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>char's favorite photos</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='25' fill='white'/></svg>">
-  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <title>Charlotte Yao</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='25' fill='%23f4f1ea'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Source+Sans+3:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0a0a0a;
-      --surface: #111111;
-      --text-primary: #e8e4dc;
-      --text-muted: #6b6b6b;
-      --accent: #c8b89a;
-      --border: rgba(255,255,255,0.06);
+      --mist: #f4f1ea;
+      --ink-on-grey: #f7f4ee;
+      --muted-on-grey: rgba(247, 244, 238, 0.82);
+      --link: #f7f4ee;
     }
 
-    html { scroll-behavior: smooth; }
+    html, body {
+      height: 100%;
+    }
 
     body {
-      background: var(--bg);
-      color: var(--text-primary);
-      font-family: 'EB Garamond', serif;
       min-height: 100vh;
+      font-family: 'Source Sans 3', sans-serif;
+      color: var(--ink-on-grey);
+      overflow: hidden;
     }
 
-    /* ── Header ── */
-    header {
-      padding: 3.5rem 4rem 2rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
+    .hero-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: #8d8f90;
     }
 
-    .site-title {
-      font-family: 'EB Garamond', serif;
-      font-size: 1.5rem;
-      font-weight: 400;
-      letter-spacing: 0.02em;
-      color: var(--text-primary);
-    }
-
-    .site-year {
-      font-family: 'EB Garamond', serif;
-      font-size: 0.95rem;
-      color: var(--text-muted);
-      letter-spacing: 0.06em;
-    }
-
-    /* ── Grid ── */
-    .gallery {
-      padding: 3rem 4rem 6rem;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 30px;
-    }
-
-    @media (max-width: 900px) {
-      .gallery { grid-template-columns: repeat(2, 1fr); padding: 2rem 2rem 4rem; }
-      header { padding: 2.5rem 2rem 1.5rem; }
-    }
-    @media (max-width: 560px) {
-      .gallery { grid-template-columns: 1fr; }
-    }
-
-    .photo-item {
-      position: relative;
-      aspect-ratio: 1 / 1;
-      cursor: pointer;
-      background: var(--surface);
-    }
-
-    .photo-item img {
+    .hero-video {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
-      overflow: hidden;
-      transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                  filter 0.6s ease;
-      filter: brightness(0.92) saturate(0.85); 
-    }
-
-    .photo-item.active img {
-      transform: scale(1.04);
-      filter: brightness(0.55) saturate(0.7);
-    }
-
-    .photo-meta {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      padding: 1.5rem;
-      opacity: 0;
-      transition: opacity 0.4s ease;
-      pointer-events: none;
-    }
-
-    .photo-item.active .photo-meta {
-      opacity: 1;
-    }
-
-    .photo-item:first-child.clicked::before {
       display: none;
     }
 
-    .meta-location {
-      font-family: 'EB Garamond', serif;
-      font-size: 1.15rem;
-      color: var(--text-primary);
-      line-height: 1.2;
-      margin-bottom: 0.35rem;
-    }
-
-    .meta-date {
-      font-family: 'EB Garamond', serif;
-      font-size: 0.9rem;
-      color: var(--accent);
-      letter-spacing: 0.04em;
-    }
-
-    /* ── Footer ── */
-    footer {
-      padding: 2rem 4rem;
-      border-top: 1px solid var(--border);
-      text-align: center;
-    }
-
-    .footer-text {
-      font-family: 'EB Garamond', serif;
-      font-size: 0.95rem;
-      color: var(--text-muted);
-      letter-spacing: 0.06em;
-    }
-    
-    /* ── Click Incentive ── */
-    @keyframes pulse-glow {
-      0%, 100% { opacity: 0.15; transform: scale(2); }
-      50% { opacity: 0.55; transform: scale(3); }
-    }
-
-    .photo-item:first-child::before {
-      content: '';
+    .hero-video.has-source {
       display: block;
-      position: absolute;
-      top: 14px;
-      left: 14px;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #ffffff;
+    }
+
+    .mist {
+      position: fixed;
+      inset: -20%;
       z-index: 2;
-      animation: pulse-glow 2s ease-in-out infinite;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at 18% 40%, rgba(244, 241, 234, 0.12), transparent 46%),
+        radial-gradient(ellipse at 78% 70%, rgba(197, 206, 192, 0.1), transparent 50%);
+      animation: drift 28s ease-in-out infinite alternate;
     }
 
-    .photo-item:first-child.active::before {
-      display: none;
+    @keyframes drift {
+      from { transform: translate3d(-2%, -1%, 0); }
+      to { transform: translate3d(3%, 2%, 0); }
     }
 
+    .intro {
+      position: relative;
+      z-index: 3;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 8vh 11vw;
+      max-width: 42rem;
+    }
+
+    h1 {
+      font-family: 'EB Garamond', serif;
+      font-weight: 400;
+      font-size: clamp(2.4rem, 4.2vw, 3.35rem);
+      letter-spacing: 0.01em;
+      line-height: 1.15;
+      margin-bottom: 1.15rem;
+    }
+
+    .bio {
+      font-weight: 300;
+      font-size: clamp(1.05rem, 1.6vw, 1.22rem);
+      line-height: 1.55;
+      color: var(--muted-on-grey);
+    }
+
+    .bio p + p {
+      margin-top: 0.15rem;
+    }
+
+    .links {
+      margin-top: 1.35rem;
+      font-weight: 300;
+      font-size: clamp(1.05rem, 1.6vw, 1.22rem);
+      color: var(--muted-on-grey);
+    }
+
+    a {
+      color: var(--link);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.22em;
+      transition: opacity 0.4s ease;
+    }
+
+    a:hover {
+      opacity: 0.7;
+    }
+
+    @media (max-width: 700px) {
+      .intro {
+        padding: 10vh 8vw;
+        align-items: flex-end;
+        padding-bottom: 14vh;
+      }
+    }
   </style>
 </head>
 <body>
+  <div class="hero-bg" aria-hidden="true"></div>
+  <!-- Add a looping clip at ./video/background.mp4, then uncomment the source below. -->
+  <video class="hero-video" id="bg-video" autoplay muted loop playsinline>
+    <!-- <source src="./video/background.mp4" type="video/mp4" /> -->
+  </video>
+  <div class="mist" aria-hidden="true"></div>
 
-  <header>
-    <h1 class="site-title">char's favorite photos</h1>
-    <span class="site-year">2022 — present</span>
-  </header>
-
-  <main class="gallery" id="gallery">
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/iceland7126.jpeg" alt="iceland" />
-      <div class="photo-meta">
-        <span class="meta-location">iceland</span>
-        <span class="meta-date">7.1.26</span>
+  <main class="intro">
+    <div>
+      <h1>Charlotte Yao</h1>
+      <div class="bio">
+        <p>Student at UCLA and<br />Incoming Boston Consulting Group</p>
+        <p>Previously PricewaterhouseCoopers and Marriott International</p>
       </div>
+      <p class="links">
+        Check out my <a href="https://www.linkedin.com/in/charlotteyao27" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        and <a href="./photography.html">Photography</a>
+      </p>
     </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/zion5226.jpeg" alt="zion" />
-      <div class="photo-meta">
-        <span class="meta-location">zion</span>
-        <span class="meta-date">5.2.26</span>
-      </div>
-    </div>
-
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/ptreyes32626.jpeg" alt="pt reyes" />
-      <div class="photo-meta">
-        <span class="meta-location">pt reyes</span>
-        <span class="meta-date">3.26.26</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/bigsur32126.jpeg" alt="big sur" />
-      <div class="photo-meta">
-        <span class="meta-location">big sur</span>
-        <span class="meta-date">3.21.26</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/deathvalley31426.jpeg" alt="death valley" />
-      <div class="photo-meta">
-        <span class="meta-location">death valley</span>
-        <span class="meta-date">3.14.26</span>
-      </div>
-    </div>
-    
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/yosemite11925.jpeg" alt="yosemite" />
-      <div class="photo-meta">
-        <span class="meta-location">yosemite</span>
-        <span class="meta-date">11.9.25</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/colorado92325.jpeg" alt="colorado" />
-      <div class="photo-meta">
-        <span class="meta-location">colorado</span>
-        <span class="meta-date">9.23.25</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/maryland62225.JPG" alt="maryland" />
-      <div class="photo-meta">
-        <span class="meta-location">maryland</span>
-        <span class="meta-date">6.22.25</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/rainier9624.jpeg" alt="rainier" />
-      <div class="photo-meta">
-        <span class="meta-location">rainier</span>
-        <span class="meta-date">9.6.24</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/lofoten81224.JPG" alt="lofoten" />
-      <div class="photo-meta">
-        <span class="meta-location">lofoten</span>
-        <span class="meta-date">8.12.24</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/mttam122323.JPG" alt="mt tam" />
-      <div class="photo-meta">
-        <span class="meta-location">mt tam</span>
-        <span class="meta-date">12.23.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/hmb122123.jpg" alt="half moon bay" />
-      <div class="photo-meta">
-        <span class="meta-location">half moon bay</span>
-        <span class="meta-date">12.21.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/skyline122023.jpeg" alt="skyline" />
-      <div class="photo-meta">
-        <span class="meta-location">skyline</span>
-        <span class="meta-date">12.20.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/yosemite9523.JPG" alt="yosemite" />
-      <div class="photo-meta">
-        <span class="meta-location">yosemite</span>
-        <span class="meta-date">9.5.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/oregon71723.JPG" alt="oregon" />
-      <div class="photo-meta">
-        <span class="meta-location">oregon</span>
-        <span class="meta-date">7.17.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/japan62423.JPG" alt="japan" />
-      <div class="photo-meta">
-        <span class="meta-location">japan</span>
-        <span class="meta-date">6.24.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/santacruz61523.jpeg" alt="santa cruz" />
-      <div class="photo-meta">
-        <span class="meta-location">santa cruz</span>
-        <span class="meta-date">6.15.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/stinson52923.jpeg" alt="stinson" />
-      <div class="photo-meta">
-        <span class="meta-location">stinson</span>
-        <span class="meta-date">5.29.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/pescadero21123.jpeg" alt="pescadero" />
-      <div class="photo-meta">
-        <span class="meta-location">pescadero</span>
-        <span class="meta-date">2.11.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/pescadero21123.jpg" alt="pescadero" />
-      <div class="photo-meta">
-        <span class="meta-location">pescadero</span>
-        <span class="meta-date">2.11.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/mttam112222.jpg" alt="mt tam" />
-      <div class="photo-meta">
-        <span class="meta-location">mt tam</span>
-        <span class="meta-date">11.22.22</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/botswana8522.jpeg" alt="botswana" />
-      <div class="photo-meta">
-        <span class="meta-location">botswana</span>
-        <span class="meta-date">8.5.22</span>
-      </div>
-    </div>
-
   </main>
 
-  <footer>
-    <span class="footer-text">charlotte yao · 2026</span>
-  </footer>
-
-  <audio id="bg-music" preload="auto"></audio>
-
   <script>
-    const gallery = document.getElementById('gallery');
-    const music = document.getElementById('bg-music');
-    let activeItem = null;
-
-    gallery.querySelectorAll('.photo-item').forEach(item => {
-      item.addEventListener('click', () => {
-        if (activeItem === item) return;
-
-        if (activeItem) activeItem.classList.remove('active');
-        item.classList.add('active');
-        document.querySelector('.photo-item:first-child').classList.add('clicked');
-        activeItem = item;
-
-        const song = item.dataset.song;
-        if (song) {
-          const fullSrc = new URL(song, location.href).href;
-          if (music.src !== fullSrc) {
-            music.src = song;
-            music.currentTime = 0;
-          }
-          music.play().catch(() => {});
-        }
-      });
-    });
+    const video = document.getElementById('bg-video');
+    const source = video.querySelector('source');
+    if (source && source.getAttribute('src')) {
+      video.classList.add('has-source');
+    }
   </script>
-
-
-
 </body>
 </html>
