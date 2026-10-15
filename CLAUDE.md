@@ -7,8 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A two-page static site. There is no build system, package manager, linter, or test suite.
 
 - `index.html` — home / intro
-- `photography.html` — photo gallery
-- Assets live in `photos/` and `music/`
+- `photography.html` — interactive photo deck
+- Assets live in `photos/` (originals), `photos/web/` (smaller copies the site loads), `video/`, and `music/` (not used right now)
 
 ## Running locally
 
@@ -29,18 +29,20 @@ python3 -m http.server 8000
 
 ## Photography page
 
-- Each photo is a `.photo-item` div in `<main id="gallery">` with an `<img>`, a `.photo-meta` overlay (location + date), and a `data-song` attribute pointing at an audio file in `music/`.
-- Clicking an item adds `.active` (dims/zooms the image, reveals the overlay) and plays its `data-song` through the shared `<audio id="bg-music">`. The track only restarts if the clicked item's song differs from the one loaded.
-- The first grid item shows a pulsing white dot (`.photo-item:first-child::before`) as a click hint; it is hidden once that item becomes active. Because it's keyed to `:first-child`, whatever photo is listed first gets the hint.
-- Header name links back to `index.html`.
-- Grid is 3 columns, dropping to 2 at ≤900px and 1 at ≤560px.
+- A single deck of glossy prints (`.print` figures in `#deck`): no border, each photo keeps its own shape inside a max box (`--print-w` / `--print-h`). Only the top 6 are drawn; each print has a fixed pseudo-random tilt so the pile looks hand-stacked.
+- Forward (right arrow, or clicking the top print): the top print slides out right, then tucks back under the pile. Back (left arrow): the bottom print slides out left from underneath, then lands on top. Animations use the Web Animations API, with no libraries. With `prefers-reduced-motion` the pile just reorders.
+- The caption under the deck shows the top print's `data-location` and `data-date`.
+- Background: `video/background.mp4`, blurred, under a light mist overlay (`.haze`). No music on this page.
+- At ≤700px the arrows move to their own row under the deck.
+- "charlotte yao" at top left links back to `index.html`.
 
 ## Adding a photo
 
-- Photos are ordered newest first in `photography.html`; insert new entries at the correct chronological position (usually the top).
-- Filename convention: `<place><M><D><YY>.<ext>` with no separators, e.g. `zion5226.jpeg` → 5.2.26. Extensions vary in case (`.jpeg`, `.jpg`, `.JPG`) — match the actual file exactly, since the hosted site is case-sensitive.
+- Put the original in `photos/`, then make a web copy with the same filename in `photos/web/` (the page only loads web copies): `sips -s format jpeg -s formatOptions 70 -Z 1600 photos/NAME --out photos/web/NAME`. If the original is already smaller, copy it as-is.
+- Add a `<figure class="print" data-location="..." data-date="..."><img data-src="./photos/web/NAME" alt="..." /></figure>` to `#deck`. Images use `data-src`; the script loads them as they near the top of the pile.
+- Photos are ordered newest first (the first figure is the top of the pile); insert new entries at the correct chronological position (usually the top).
+- Filename convention: `<place><M><D><YY>.<ext>` with no separators, e.g. `zion5226.jpeg` → 5.2.26. Extensions vary in case (`.jpeg`, `.jpg`, `.JPG`). Match the actual file exactly, since the hosted site is case-sensitive.
 - Displayed date format is `M.D.YY`; location text is lowercase and matches the `alt` text.
-- Every item currently uses `./music/Morning in the Aves.m4a`.
 
 ## Design
 

@@ -15,413 +15,378 @@
       --mist: #f4f1ea;
       --sage: #c5cec0;
       --moss: #5d6f5a;
-      --cream: #f7f3ea;
       --ink: #2f342c;
-      --muted: #6a7266;
-      --glass: rgba(247, 243, 234, 0.78);
-      --border: rgba(93, 111, 90, 0.14);
+      --muted: #5f675b;
+      /* Largest a print can be; each photo keeps its own shape inside this box. */
+      --print-w: min(70vw, 560px);
+      --print-h: min(56vh, 560px);
     }
 
-    html { scroll-behavior: smooth; }
+    html, body { height: 100%; }
 
     body {
-      position: relative;
       min-height: 100vh;
+      min-height: 100dvh;
+      overflow: hidden;
       color: var(--ink);
       font-family: 'Source Sans 3', sans-serif;
-      background: var(--mist);
+      background: #a9aea4;
     }
 
-    body::before {
-      content: '';
+    /* Hazy water: the home page video, blurred and washed in mist. */
+    .bg-video {
       position: fixed;
-      inset: 0;
-      z-index: -2;
-      background:
-        url('./photos/iceland7126.jpeg') center / cover no-repeat;
-      filter: blur(42px) saturate(0.7) brightness(1.18);
-      transform: scale(1.08);
-    }
-
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      background:
-        linear-gradient(180deg, rgba(244, 241, 234, 0.82), rgba(197, 206, 192, 0.45) 48%, rgba(247, 243, 234, 0.88)),
-        linear-gradient(120deg, rgba(255, 220, 230, 0.12), rgba(200, 230, 255, 0.08), rgba(210, 255, 220, 0.1));
-      pointer-events: none;
-    }
-
-    header {
-      position: sticky;
-      top: 1.25rem;
-      z-index: 10;
-      margin: 1.25rem 4rem 0;
-      padding: 1.1rem 1.5rem;
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 1rem;
-      background: var(--glass);
-      border: 1px solid var(--border);
-      backdrop-filter: blur(22px) saturate(1.1);
-      -webkit-backdrop-filter: blur(22px) saturate(1.1);
-      box-shadow: 0 10px 40px rgba(47, 52, 44, 0.06);
-    }
-
-    .site-title {
-      font-family: 'EB Garamond', serif;
-      font-size: 1.45rem;
-      font-weight: 400;
-      letter-spacing: 0.02em;
-      color: var(--ink);
-      text-decoration: none;
-    }
-
-    .site-title:hover { color: var(--moss); }
-
-    .site-year {
-      font-size: 0.88rem;
-      font-weight: 300;
-      color: var(--muted);
-      letter-spacing: 0.08em;
-    }
-
-    .gallery {
-      padding: 3rem 4rem 6rem;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 28px;
-    }
-
-    @media (max-width: 900px) {
-      .gallery { grid-template-columns: repeat(2, 1fr); padding: 2rem 2rem 4rem; }
-      header { margin: 1rem 1.5rem 0; }
-    }
-    @media (max-width: 560px) {
-      .gallery { grid-template-columns: 1fr; }
-    }
-
-    .photo-item {
-      position: relative;
-      aspect-ratio: 1 / 1;
-      cursor: pointer;
-      overflow: hidden;
-      background: rgba(247, 243, 234, 0.4);
-      box-shadow: 0 12px 32px rgba(47, 52, 44, 0.08);
-    }
-
-    .photo-item img {
-      position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
-      transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                  filter 0.8s ease;
-      filter: brightness(0.97) saturate(0.88);
+      filter: blur(22px) saturate(0.85) brightness(1.08);
+      transform: scale(1.15);
     }
 
-    .photo-item.active img {
-      transform: scale(1.04);
-      filter: brightness(0.62) saturate(0.75);
-    }
-
-    .photo-meta {
-      position: absolute;
+    .haze {
+      position: fixed;
       inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at 50% 45%, rgba(244, 241, 234, 0.5), rgba(244, 241, 234, 0.28) 70%),
+        linear-gradient(120deg, rgba(255, 220, 230, 0.06), rgba(200, 230, 255, 0.06), rgba(210, 255, 220, 0.06));
+    }
+
+    .home {
+      position: fixed;
+      top: 1.6rem;
+      left: 2rem;
+      z-index: 5;
+      font-family: 'EB Garamond', serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.02em;
+      color: var(--ink);
+      text-decoration: none;
+      transition: opacity 0.4s ease;
+    }
+
+    .home:hover { opacity: 0.65; }
+
+    .stage {
+      position: relative;
+      min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
-      padding: 1.4rem;
-      opacity: 0;
-      transition: opacity 0.5s ease;
+      align-items: center;
+      justify-content: center;
+      gap: 3rem;
+      padding: 4rem 1rem 3rem;
+    }
+
+    .table {
+      display: flex;
+      align-items: center;
+      gap: clamp(0.5rem, 5vw, 4.5rem);
+    }
+
+    .deck {
+      position: relative;
+      width: var(--print-w);
+      height: var(--print-h);
+    }
+
+    /* A glossy print: no border, barely-rounded corners, a soft lift off the
+       table, and a sheen that drifts with the cursor. */
+    .print {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      border-radius: 2px;
+      overflow: hidden;
+      background: #e9e6df;
+      box-shadow:
+        0 1px 1px rgba(30, 34, 30, 0.14),
+        0 6px 14px rgba(30, 34, 30, 0.14),
+        0 22px 44px rgba(30, 34, 30, 0.14);
+      transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.4s ease;
+      will-change: transform;
+    }
+
+    .print.top { cursor: pointer; }
+
+    .print img {
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: var(--print-w);
+      max-height: var(--print-h);
+      min-width: 120px;
+      min-height: 120px;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .print::after {
+      content: '';
+      position: absolute;
+      inset: 0;
       pointer-events: none;
-      background: linear-gradient(180deg, transparent 40%, rgba(47, 52, 44, 0.38));
+      background:
+        linear-gradient(115deg, rgba(255, 255, 255, 0) 32%, rgba(255, 255, 255, 0.2) 46%, rgba(255, 255, 255, 0) 60%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 35%);
+      background-size: 260% 260%, 100% 100%;
+      background-position: var(--gx, 30%) var(--gy, 30%), 0 0;
+      mix-blend-mode: screen;
+      transition: background-position 1.2s ease-out;
     }
 
-    .photo-item.active .photo-meta {
-      opacity: 1;
+    .nav {
+      flex: none;
+      width: 2.75rem;
+      height: 4.5rem;
+      display: grid;
+      place-items: center;
+      background: none;
+      border: 0;
+      color: var(--ink);
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.3s ease, transform 0.3s ease;
     }
 
-    .meta-location {
-      font-family: 'EB Garamond', serif;
-      font-size: 1.15rem;
-      color: var(--mist);
-      line-height: 1.2;
-      margin-bottom: 0.3rem;
+    .nav:hover { opacity: 1; }
+    .prev:hover { transform: translateX(-3px); }
+    .next:hover { transform: translateX(3px); }
+    .nav:focus-visible { outline: 1px solid var(--ink); outline-offset: 2px; }
+    .nav svg { width: 1.1rem; height: 3.4rem; }
+
+    .caption {
+      text-align: center;
+      min-height: 3rem;
+      transition: opacity 0.3s ease;
     }
 
-    .meta-date {
+    .caption.fading { opacity: 0; }
+
+    .cap-location {
+      display: block;
+      font-size: 1rem;
+      font-weight: 400;
+      letter-spacing: 0.32em;
+      margin-right: -0.32em; /* keep spaced text optically centered */
+    }
+
+    .cap-date {
+      display: block;
+      margin-top: 0.45rem;
       font-size: 0.86rem;
       font-weight: 300;
-      color: var(--sage);
-      letter-spacing: 0.06em;
-    }
-
-    footer {
-      padding: 2rem 4rem 3rem;
-      text-align: center;
-    }
-
-    .footer-text {
-      font-family: 'EB Garamond', serif;
-      font-size: 0.95rem;
+      letter-spacing: 0.14em;
       color: var(--muted);
-      letter-spacing: 0.06em;
     }
 
-    .footer-text a {
-      color: var(--moss);
-      text-decoration: none;
-    }
-
-    @keyframes pulse-glow {
-      0%, 100% { opacity: 0.2; transform: scale(1); }
-      50% { opacity: 0.7; transform: scale(1.55); }
-    }
-
-    .photo-item:first-child::before {
-      content: '';
-      display: block;
-      position: absolute;
-      top: 14px;
-      left: 14px;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #ffffff;
-      z-index: 2;
-      animation: pulse-glow 2.4s ease-in-out infinite;
-    }
-
-    .photo-item:first-child.active::before,
-    .photo-item:first-child.clicked::before {
-      display: none;
+    @media (max-width: 700px) {
+      :root {
+        --print-w: 76vw;
+        --print-h: 52vh;
+      }
+      .home { top: 1.2rem; left: 1.25rem; }
+      .stage { gap: 1.5rem; }
+      /* Arrows drop to their own row under the deck, clear of the tilted prints. */
+      .table {
+        flex-wrap: wrap;
+        justify-content: center;
+        column-gap: 44vw;
+        row-gap: 2.5rem;
+      }
+      .deck { order: -1; flex-basis: 100%; }
+      .nav { height: 3rem; }
+      .nav svg { height: 2.4rem; }
     }
   </style>
 </head>
 <body>
+  <video class="bg-video" id="bg-video" src="./video/background.mp4" autoplay muted loop playsinline aria-hidden="true"></video>
+  <div class="haze" aria-hidden="true"></div>
 
-  <header>
-    <a class="site-title" href="./index.html">charlotte yao</a>
-    <span class="site-year">photography · 2022 — present</span>
-  </header>
+  <a class="home" href="./index.html">charlotte yao</a>
 
-  <main class="gallery" id="gallery">
+  <main class="stage">
+    <div class="table">
+      <button class="nav prev" id="prev" type="button" aria-label="Previous photo">
+        <svg viewBox="0 0 16 48" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M14 2 L2 24 L14 46" /></svg>
+      </button>
 
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/iceland7126.jpeg" alt="iceland" />
-      <div class="photo-meta">
-        <span class="meta-location">iceland</span>
-        <span class="meta-date">7.1.26</span>
+      <div class="deck" id="deck">
+      <figure class="print" data-location="iceland" data-date="7.1.26"><img data-src="./photos/web/iceland7126.jpeg" alt="iceland" /></figure>
+      <figure class="print" data-location="zion" data-date="5.2.26"><img data-src="./photos/web/zion5226.jpeg" alt="zion" /></figure>
+      <figure class="print" data-location="pt reyes" data-date="3.26.26"><img data-src="./photos/web/ptreyes32626.jpeg" alt="pt reyes" /></figure>
+      <figure class="print" data-location="big sur" data-date="3.21.26"><img data-src="./photos/web/bigsur32126.jpeg" alt="big sur" /></figure>
+      <figure class="print" data-location="death valley" data-date="3.14.26"><img data-src="./photos/web/deathvalley31426.jpeg" alt="death valley" /></figure>
+      <figure class="print" data-location="yosemite" data-date="11.9.25"><img data-src="./photos/web/yosemite11925.jpeg" alt="yosemite" /></figure>
+      <figure class="print" data-location="colorado" data-date="9.23.25"><img data-src="./photos/web/colorado92325.jpeg" alt="colorado" /></figure>
+      <figure class="print" data-location="maryland" data-date="6.22.25"><img data-src="./photos/web/maryland62225.JPG" alt="maryland" /></figure>
+      <figure class="print" data-location="rainier" data-date="9.6.24"><img data-src="./photos/web/rainier9624.jpeg" alt="rainier" /></figure>
+      <figure class="print" data-location="lofoten" data-date="8.12.24"><img data-src="./photos/web/lofoten81224.JPG" alt="lofoten" /></figure>
+      <figure class="print" data-location="mt tam" data-date="12.23.23"><img data-src="./photos/web/mttam122323.JPG" alt="mt tam" /></figure>
+      <figure class="print" data-location="half moon bay" data-date="12.21.23"><img data-src="./photos/web/hmb122123.jpg" alt="half moon bay" /></figure>
+      <figure class="print" data-location="skyline" data-date="12.20.23"><img data-src="./photos/web/skyline122023.jpeg" alt="skyline" /></figure>
+      <figure class="print" data-location="yosemite" data-date="9.5.23"><img data-src="./photos/web/yosemite9523.JPG" alt="yosemite" /></figure>
+      <figure class="print" data-location="oregon" data-date="7.17.23"><img data-src="./photos/web/oregon71723.JPG" alt="oregon" /></figure>
+      <figure class="print" data-location="japan" data-date="6.24.23"><img data-src="./photos/web/japan62423.JPG" alt="japan" /></figure>
+      <figure class="print" data-location="santa cruz" data-date="6.15.23"><img data-src="./photos/web/santacruz61523.jpeg" alt="santa cruz" /></figure>
+      <figure class="print" data-location="stinson" data-date="5.29.23"><img data-src="./photos/web/stinson52923.jpeg" alt="stinson" /></figure>
+      <figure class="print" data-location="pescadero" data-date="2.11.23"><img data-src="./photos/web/pescadero21123.jpeg" alt="pescadero" /></figure>
+      <figure class="print" data-location="pescadero" data-date="2.11.23"><img data-src="./photos/web/pescadero21123.jpg" alt="pescadero" /></figure>
+      <figure class="print" data-location="mt tam" data-date="11.22.22"><img data-src="./photos/web/mttam112222.jpg" alt="mt tam" /></figure>
+      <figure class="print" data-location="botswana" data-date="8.5.22"><img data-src="./photos/web/botswana8522.jpeg" alt="botswana" /></figure>
       </div>
+
+      <button class="nav next" id="next" type="button" aria-label="Next photo">
+        <svg viewBox="0 0 16 48" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M2 2 L14 24 L2 46" /></svg>
+      </button>
     </div>
 
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/zion5226.jpeg" alt="zion" />
-      <div class="photo-meta">
-        <span class="meta-location">zion</span>
-        <span class="meta-date">5.2.26</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/ptreyes32626.jpeg" alt="pt reyes" />
-      <div class="photo-meta">
-        <span class="meta-location">pt reyes</span>
-        <span class="meta-date">3.26.26</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/bigsur32126.jpeg" alt="big sur" />
-      <div class="photo-meta">
-        <span class="meta-location">big sur</span>
-        <span class="meta-date">3.21.26</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/deathvalley31426.jpeg" alt="death valley" />
-      <div class="photo-meta">
-        <span class="meta-location">death valley</span>
-        <span class="meta-date">3.14.26</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/yosemite11925.jpeg" alt="yosemite" />
-      <div class="photo-meta">
-        <span class="meta-location">yosemite</span>
-        <span class="meta-date">11.9.25</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/colorado92325.jpeg" alt="colorado" />
-      <div class="photo-meta">
-        <span class="meta-location">colorado</span>
-        <span class="meta-date">9.23.25</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/maryland62225.JPG" alt="maryland" />
-      <div class="photo-meta">
-        <span class="meta-location">maryland</span>
-        <span class="meta-date">6.22.25</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/rainier9624.jpeg" alt="rainier" />
-      <div class="photo-meta">
-        <span class="meta-location">rainier</span>
-        <span class="meta-date">9.6.24</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/lofoten81224.JPG" alt="lofoten" />
-      <div class="photo-meta">
-        <span class="meta-location">lofoten</span>
-        <span class="meta-date">8.12.24</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/mttam122323.JPG" alt="mt tam" />
-      <div class="photo-meta">
-        <span class="meta-location">mt tam</span>
-        <span class="meta-date">12.23.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/hmb122123.jpg" alt="half moon bay" />
-      <div class="photo-meta">
-        <span class="meta-location">half moon bay</span>
-        <span class="meta-date">12.21.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/skyline122023.jpeg" alt="skyline" />
-      <div class="photo-meta">
-        <span class="meta-location">skyline</span>
-        <span class="meta-date">12.20.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/yosemite9523.JPG" alt="yosemite" />
-      <div class="photo-meta">
-        <span class="meta-location">yosemite</span>
-        <span class="meta-date">9.5.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/oregon71723.JPG" alt="oregon" />
-      <div class="photo-meta">
-        <span class="meta-location">oregon</span>
-        <span class="meta-date">7.17.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/japan62423.JPG" alt="japan" />
-      <div class="photo-meta">
-        <span class="meta-location">japan</span>
-        <span class="meta-date">6.24.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/santacruz61523.jpeg" alt="santa cruz" />
-      <div class="photo-meta">
-        <span class="meta-location">santa cruz</span>
-        <span class="meta-date">6.15.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/stinson52923.jpeg" alt="stinson" />
-      <div class="photo-meta">
-        <span class="meta-location">stinson</span>
-        <span class="meta-date">5.29.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/pescadero21123.jpeg" alt="pescadero" />
-      <div class="photo-meta">
-        <span class="meta-location">pescadero</span>
-        <span class="meta-date">2.11.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/pescadero21123.jpg" alt="pescadero" />
-      <div class="photo-meta">
-        <span class="meta-location">pescadero</span>
-        <span class="meta-date">2.11.23</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/mttam112222.jpg" alt="mt tam" />
-      <div class="photo-meta">
-        <span class="meta-location">mt tam</span>
-        <span class="meta-date">11.22.22</span>
-      </div>
-    </div>
-
-    <div class="photo-item" data-song="./music/Morning in the Aves.m4a">
-      <img src="./photos/botswana8522.jpeg" alt="botswana" />
-      <div class="photo-meta">
-        <span class="meta-location">botswana</span>
-        <span class="meta-date">8.5.22</span>
-      </div>
-    </div>
-
+    <p class="caption" id="caption" aria-live="polite">
+      <span class="cap-location" id="cap-location"></span>
+      <span class="cap-date" id="cap-date"></span>
+    </p>
   </main>
 
-  <footer>
-    <span class="footer-text"><a href="./index.html">charlotte yao</a> · 2026</span>
-  </footer>
-
-  <audio id="bg-music" preload="auto"></audio>
-
   <script>
-    const gallery = document.getElementById('gallery');
-    const music = document.getElementById('bg-music');
-    let activeItem = null;
+    const deck = document.getElementById('deck');
+    const prints = [...deck.querySelectorAll('.print')];
+    const caption = document.getElementById('caption');
+    const capLocation = document.getElementById('cap-location');
+    const capDate = document.getElementById('cap-date');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const N = prints.length;
+    const VISIBLE = 6; // prints drawn in the pile; the rest wait hidden beneath
 
-    gallery.querySelectorAll('.photo-item').forEach(item => {
-      item.addEventListener('click', () => {
-        if (activeItem === item) return;
+    if (reduceMotion) document.getElementById('bg-video').pause();
 
-        if (activeItem) activeItem.classList.remove('active');
-        item.classList.add('active');
-        document.querySelector('.photo-item:first-child').classList.add('clicked');
-        activeItem = item;
+    // order[0] is the top of the pile.
+    let order = prints.map((_, i) => i);
+    let busy = false;
 
-        const song = item.dataset.song;
-        if (song) {
-          const fullSrc = new URL(song, location.href).href;
-          if (music.src !== fullSrc) {
-            music.src = song;
-            music.currentTime = 0;
-          }
-          music.play().catch(() => {});
-        }
+    // Each print always lands at the same slight angle, so the pile looks
+    // hand-stacked but doesn't reshuffle its tilt every time.
+    function rand(i, salt) {
+      const x = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
+      return x - Math.floor(x);
+    }
+
+    function rest(i, k) {
+      if (k === 0) return `translate(-50%, -50%) rotate(${(rand(i, 1) - 0.5) * 1.6}deg)`;
+      const dx = (rand(i, 2) - 0.5) * 26;
+      const dy = (rand(i, 3) - 0.5) * 20;
+      const rot = (rand(i, 4) - 0.5) * 13;
+      return `translate(-50%, -50%) translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
+    }
+
+    function aside(el, dir) {
+      const w = el.offsetWidth || 300;
+      return `translate(-50%, -50%) translate(${dir * w * 0.78}px, -18px) rotate(${dir * 9}deg)`;
+    }
+
+    function load(i) {
+      const img = prints[i].querySelector('img');
+      if (!img.src) img.src = img.dataset.src;
+    }
+
+    function layout() {
+      order.forEach((i, k) => {
+        const el = prints[i];
+        el.style.zIndex = N - k;
+        el.style.transform = rest(i, k);
+        el.style.opacity = k < VISIBLE ? 1 : 0;
+        el.classList.toggle('top', k === 0);
+        el.setAttribute('aria-hidden', k === 0 ? 'false' : 'true');
       });
+      // Load what's on the pile, plus the bottom print for the back arrow.
+      for (let k = 0; k < VISIBLE; k++) load(order[k]);
+      load(order[N - 1]);
+    }
+
+    // Reads the top print when the text swaps, after flip() has reordered.
+    function setCaption(animate) {
+      const apply = () => {
+        const el = prints[order[0]];
+        capLocation.textContent = el.dataset.location;
+        capDate.textContent = el.dataset.date;
+        caption.classList.remove('fading');
+      };
+      if (!animate) return apply();
+      caption.classList.add('fading');
+      setTimeout(apply, 300);
+    }
+
+    // Forward: the top print slides out to the right, then tucks back in
+    // under the pile. Back: the bottom print slides out to the left from
+    // underneath, then lands on top.
+    async function flip(dir) {
+      if (busy) return;
+      busy = true;
+
+      const i = dir > 0 ? order[0] : order[N - 1];
+      const el = prints[i];
+
+      if (reduceMotion) {
+        dir > 0 ? order.push(order.shift()) : order.unshift(order.pop());
+        layout();
+        setCaption(true);
+        busy = false;
+        return;
+      }
+
+      el.style.transition = 'none';
+      el.style.opacity = 1;
+      const from = el.style.transform;
+      const out = aside(el, dir);
+
+      const lift = el.animate(
+        [{ transform: from }, { transform: out }],
+        { duration: 430, easing: 'cubic-bezier(0.3, 0.7, 0.4, 1)', fill: 'forwards' }
+      );
+      caption.classList.add('fading');
+      await lift.finished;
+
+      dir > 0 ? order.push(order.shift()) : order.unshift(order.pop());
+      layout();
+      setCaption(false);
+      const k = dir > 0 ? N - 1 : 0;
+
+      const settle = el.animate(
+        [{ transform: out, opacity: 1 }, { transform: rest(i, k), opacity: 1 }],
+        { duration: 560, easing: 'cubic-bezier(0.45, 0, 0.25, 1)' }
+      );
+      lift.cancel();
+      await settle.finished;
+
+      el.style.transition = '';
+      busy = false;
+    }
+
+    document.getElementById('next').addEventListener('click', () => flip(1));
+    document.getElementById('prev').addEventListener('click', () => flip(-1));
+    deck.addEventListener('click', (e) => {
+      if (e.target.closest('.print.top')) flip(1);
     });
+
+    // Glossy sheen follows the cursor across the top print.
+    deck.addEventListener('pointermove', (e) => {
+      const el = prints[order[0]];
+      const r = el.getBoundingClientRect();
+      const x = Math.min(Math.max((e.clientX - r.left) / r.width, 0), 1);
+      const y = Math.min(Math.max((e.clientY - r.top) / r.height, 0), 1);
+      el.style.setProperty('--gx', `${20 + x * 60}%`);
+      el.style.setProperty('--gy', `${20 + y * 60}%`);
+    });
+
+    // First paint without transitions, so the pile doesn't fly into place.
+    prints.forEach((el) => { el.style.transition = 'none'; });
+    layout();
+    setCaption(false);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      prints.forEach((el) => { el.style.transition = ''; });
+    }));
   </script>
 </body>
 </html>
