@@ -16,7 +16,7 @@
       --ink-on-grey: #f7f4ee;
       --muted-on-grey: rgba(247, 244, 238, 0.82);
       --link: #f7f4ee;
-      --text-shadow: 0 1px 2px rgba(40, 44, 40, 0.18), 0 2px 12px rgba(40, 44, 40, 0.14);
+      --text-shadow: 0 1px 2px rgba(30, 34, 30, 0.38), 0 2px 10px rgba(30, 34, 30, 0.3), 0 0 28px rgba(30, 34, 30, 0.2);
     }
 
     html, body {
@@ -220,14 +220,23 @@
             float age = uTime - r.z;
             if (age < 0.0 || age > LIFE) continue;
 
+            // Perspective: the video looks across the water, so ripples
+            // higher on screen are farther away — smaller, and squashed
+            // into flatter ovals. depth is 0 at the bottom, 1 at the top.
+            float depth = clamp(r.y / uRes.y, 0.0, 1.0);
+            float size = mix(1.0, 0.5, depth);
+            float squash = mix(0.7, 0.35, depth); // vertical / horizontal radius
+
             vec2 d = (p - r.xy) / uDpr;
+            d.y /= squash;
+            d /= size;
             float dist = length(d);
             float x = dist - age * SPEED * (0.6 + 0.4 * r.w);
             float band = exp(-(x * x) / (WIDTH * WIDTH));
             float fade = 1.0 - age / LIFE;
             float wave = sin(x * 6.2831 / WAVE) * band * fade * fade * r.w;
 
-            if (dist > 0.001) offset += (d / dist) * wave;
+            if (dist > 0.001) offset += vec2(d.x, d.y * squash) / dist * wave * size;
             shade += wave;
           }
 
@@ -344,8 +353,11 @@
       requestAnimationFrame(frame);
     })();
 
-    // Water sound: the video's own audio, routed through a gain node so it
-    // can swell quietly while the visitor moves or taps, then fade to silence.
+    // Water sound: the video's water audio, extracted to video/water.m4a and
+    // looped with Web Audio. Each pass overlaps the next with a short
+    // equal-power crossfade, so there's no gap or dip at the seam (looping the
+    // video's own audio stalled for a moment every 8.75s). A master gain swells
+    // quietly while the visitor moves or taps, then fades to silence.
     // Browsers only allow sound after a click, tap or key press, so the cursor
     // brings it in only after that first gesture.
     (function waterSound() {
@@ -354,17 +366,58 @@
       if (!AudioCtx) return;
 
       const PEAK = 0.15;
+      const TRIM = 0.06; // seconds cut from each end (encoder padding)
+      const XF = 0.6;    // crossfade between passes, seconds
+      const fadeIn = new Float32Array(32).map((_, i) => Math.sin((i / 31) * Math.PI / 2));
+      const fadeOut = fadeIn.slice().reverse();
+
+      const audioData = fetch('./video/water.m4a').then((r) => r.arrayBuffer());
       let ctx = null;
       let gain = null;
+      let buffer = null;
+      let nextStart = 0;
       let rising = false;
       let idle = null;
+
+      function playPass(at) {
+        const len = buffer.duration - 2 * TRIM;
+        const src = ctx.createBufferSource();
+        const env = ctx.createGain();
+        src.buffer = buffer;
+        env.gain.value = 0;
+        env.gain.setValueCurveAtTime(fadeIn, at, XF);
+        env.gain.setValueCurveAtTime(fadeOut, at + len - XF, XF);
+        src.connect(env).connect(gain);
+        src.start(at, TRIM, len);
+        return len;
+      }
+
+      // Keep about 2s of passes scheduled ahead of the playhead.
+      function schedule() {
+        if (!buffer) return;
+        if (nextStart < ctx.currentTime) nextStart = ctx.currentTime + 0.05;
+        while (nextStart < ctx.currentTime + 2) {
+          nextStart += playPass(nextStart) - XF;
+        }
+      }
 
       function setup() {
         ctx = new AudioCtx();
         gain = ctx.createGain();
         gain.gain.value = 0;
-        ctx.createMediaElementSource(video).connect(gain).connect(ctx.destination);
-        video.muted = false;
+        gain.connect(ctx.destination);
+        audioData
+          .then((data) => ctx.decodeAudioData(data))
+          .then((decoded) => {
+            buffer = decoded;
+            schedule();
+            setInterval(schedule, 500);
+          })
+          .catch(() => {});
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) ctx.suspend();
+          else ctx.resume().then(schedule);
+        });
       }
 
       function ramp(to, seconds) {
