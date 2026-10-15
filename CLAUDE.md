@@ -23,7 +23,8 @@ python3 -m http.server 8000
 - Full-viewport grey placeholder (`.hero-bg`) until a looping video is added.
 - To add video: place a file at `video/background.mp4` and uncomment the `<source>` in `index.html`. The script shows the video only when a `src` is present.
 - Water ripples: a WebGL `.ripple-canvas` (inserted by script right after the video) redraws the video and bends it around the cursor — a gentle trail every ~40px of movement, a bigger splash on click/tap. Skipped with `prefers-reduced-motion`, and removed if WebGL or the video texture is unavailable (e.g. opened via `file://`), so serve the directory to see it.
-- Left-aligned intro block: name (EB Garamond), bio (Source Sans 3), LinkedIn + Photography links.
+- Water sound: the video's own audio track, routed through a Web Audio gain node. Silent until the first click/tap/key press (browser autoplay rules); after that, moving or tapping swells it to ~15% volume and it fades out ~2s after the visitor stops. No mute toggle by design.
+- Left-aligned intro block, vertically centered at every screen size: name (EB Garamond), bio (Source Sans 3) with "adventure" linking to `photography.html`, then "say hello on linkedin or email" (email is a `mailto:` link).
 - LinkedIn: `https://www.linkedin.com/in/charlotteyao27`
 
 ## Photography page

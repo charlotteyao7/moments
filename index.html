@@ -86,6 +86,7 @@
       position: relative;
       z-index: 3;
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       align-items: center;
       padding: 8vh 11vw;
@@ -134,9 +135,7 @@
 
     @media (max-width: 700px) {
       .intro {
-        padding: 10vh 8vw;
-        align-items: flex-end;
-        padding-bottom: 14vh;
+        padding: 8vh 8vw;
       }
     }
   </style>
@@ -153,11 +152,11 @@
       <h1>charlotte yao</h1>
       <div class="bio">
         <p>student at ucla<br />incoming at boston consulting group</p>
-        <p>enjoyer of adventure & conversation</p>
+        <p>enjoyer of <a href="./photography.html">adventure</a> & conversation</p>
       </div>
       <p class="links">
-        check out my <a href="https://www.linkedin.com/in/charlotteyao27" target="_blank" rel="noopener noreferrer">linkedin</a>
-        and <a href="./photography.html">photography</a>
+        say hello on <a href="https://www.linkedin.com/in/charlotteyao27" target="_blank" rel="noopener noreferrer">linkedin</a>
+        or <a href="mailto:charlotteyao27@gmail.com">email</a>
       </p>
     </div>
   </main>
@@ -343,6 +342,66 @@
         requestAnimationFrame(frame);
       }
       requestAnimationFrame(frame);
+    })();
+
+    // Water sound: the video's own audio, routed through a gain node so it
+    // can swell quietly while the visitor moves or taps, then fade to silence.
+    // Browsers only allow sound after a click, tap or key press, so the cursor
+    // brings it in only after that first gesture.
+    (function waterSound() {
+      if (!video.classList.contains('has-source')) return;
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+
+      const PEAK = 0.15;
+      let ctx = null;
+      let gain = null;
+      let rising = false;
+      let idle = null;
+
+      function setup() {
+        ctx = new AudioCtx();
+        gain = ctx.createGain();
+        gain.gain.value = 0;
+        ctx.createMediaElementSource(video).connect(gain).connect(ctx.destination);
+        video.muted = false;
+      }
+
+      function ramp(to, seconds) {
+        const t = ctx.currentTime;
+        gain.gain.cancelScheduledValues(t);
+        gain.gain.setValueAtTime(gain.gain.value, t);
+        gain.gain.linearRampToValueAtTime(to, t + seconds);
+      }
+
+      function swell() {
+        if (!ctx) return;
+        if (!rising) {
+          ramp(PEAK, 0.6);
+          rising = true;
+        }
+        clearTimeout(idle);
+        idle = setTimeout(() => {
+          ramp(0, 1.5);
+          rising = false;
+        }, 2000);
+      }
+
+      function wake() {
+        if (!ctx) {
+          try { setup(); } catch (err) { return; }
+        }
+        if (ctx.state !== 'running') ctx.resume();
+        if (video.paused) video.play().catch(() => {});
+        swell();
+      }
+
+      // pointerup and keydown count as a user gesture on every browser,
+      // including touch screens where pointerdown alone does not.
+      ['pointerdown', 'pointerup', 'keydown'].forEach((type) => {
+        window.addEventListener(type, wake, { passive: true });
+      });
+      window.addEventListener('pointermove', swell, { passive: true });
     })();
   </script>
 </body>
